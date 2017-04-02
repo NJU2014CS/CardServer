@@ -1,10 +1,11 @@
 package server;
 
 import java.awt.BorderLayout;
+import java.io.File;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.StreamCorruptedException;
+import java.io.Serializable;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -12,7 +13,12 @@ import java.util.Date;
 
 import javax.swing.*;
 
-import database.UserDatabase;
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.imgcodecs.Imgcodecs;
+
+import recognition.NativeFunction;
+import tools.Tools;
 
 public class Server extends JFrame{
 	private static final long serialVersionUID = 1L;
@@ -20,9 +26,11 @@ public class Server extends JFrame{
 	private static Object Result;
 	private static JTextArea jta = new JTextArea();
 //	private List<String> message = new ArrayList<String>();
+	private ServerSocket serverSocket;
 	
 	public Server() {
 		setLayout(new BorderLayout());
+		jta.setEditable(false);
 		add(new JScrollPane(jta), BorderLayout.CENTER);
 		setTitle("Server");
 		setSize(500, 300);
@@ -30,44 +38,61 @@ public class Server extends JFrame{
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setVisible(true);
 		
+		//加载动态库
+		System.loadLibrary("TestJNI");
+		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+		
+		//获取当前文件夹
+		File directory=new File("");
+		NativeFunction.Initial(directory.getAbsolutePath()+"\\logo\\");
+		
 		try {
-			ServerSocket serverSocket = new ServerSocket(8000);
+			serverSocket = new ServerSocket(8080);
 			jta.append("Server started at " + new Date() + '\n');
 			
-			int clientNo = 1;
-			
-			while(true) {
+		}
+		catch(IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	public void ServiceStart(){
+		
+		int clientNo = 1;
+		
+		while(true) {
+			try {
 				Socket socket = serverSocket.accept();
 				
 				jta.append("Starting thread for client " + clientNo + " at " + new Date() + '\n');
-				
 				InetAddress inetAddress = socket.getInetAddress();
 				jta.append("Client " + clientNo + "'s host name is " + inetAddress.getHostName() + '\n');
 				jta.append("Client " + clientNo + "'s IP Address is " + inetAddress.getHostAddress() + '\n');
 				jta.append("Client " + clientNo + "'s socket is " + socket + '\n');
 				
 				HandleAClient task = new HandleAClient(socket);
-				
 				new Thread(task).start();
 				
 				clientNo++;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			
-		}
-		catch(IOException ex) {
-			System.out.println(ex);
 		}
 	}
 	
 	
 	static class HandleAClient implements Runnable {
+		
 		private Socket socket;
-		String nameOff = "";
-		UserDatabase ud = new UserDatabase();
-		public HandleAClient(Socket soc) {
-			this.socket = soc;
+		private final String SavedImgAddr="temp.bmp";
+		//UserDatabase ud = new UserDatabase();
+		
+		public HandleAClient(Socket socket) {
+			this.socket = socket;
 		}
-		private void send(Object Message){
+		
+		private void send(Serializable Message){
 			try {
 				ObjectOutputStream out=new ObjectOutputStream(socket.getOutputStream());
 				out.writeObject(Message);
@@ -75,56 +100,47 @@ public class Server extends JFrame{
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-	//			errorcode=3;
 			}
 		}
 		
 		private void get(){
 			try {
-			///	System.out.println(Result+ "11");
 				ObjectInputStream in=new ObjectInputStream(socket.getInputStream());
-			///	System.out.println(Result+ "22");
 				Result=in.readObject();
-			///	System.out.println(Result+ " result~~");
-			} catch (StreamCorruptedException e) {
-				// TODO Auto-generated catch block
-				//e.printStackTrace();
+			} catch (Exception e) {
 				Result=null;
-			///	System.out.println("1");
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				//e.printStackTrace();
-				Result=null;
-				System.out.println("2");
-			} catch (ClassNotFoundException e) {
-				// TODO Auto-generated catch block
-				//e.printStackTrace();
-				Result=null;
-			///	System.out.println("3");
 			}
 		}
+		
+		//短连接，服务一结束便关闭socket
+		@Override
 		public void run() {
-			ud.createConnection();
+			//ud.createConnection();
 
-			while(true) {
-				get();
-			///	System.out.println(Result+ " result");
-				//比对样本
-				if (Result != null) {
-					if(Result.equals("12345"))
-						send("ok~~");
-					if(Result.equals("123456"))
-						send("ok!!");
-				//	jta.append("\n");
-				}
-
-				
+			get();
+			
+			if(Result!=null){
+				Tools.saveImg((byte[])Result, SavedImgAddr);
+				Mat mat=Imgcodecs.imread(SavedImgAddr);
+				String res=NativeFunction.RecognitionLogo(mat.getNativeObjAddr());
+				send(res);
+			}
+			else{
+				send("Didn't get your infomation!");
+			}
+			
+			try {
+				socket.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
 		}
 	}
 	
 	public static void main(String args[]) {
-		new Server();
+		Server s=new Server();
+		s.ServiceStart();
 	}
 }
 

@@ -83,7 +83,6 @@ public class Server extends JFrame{
 	
 	
 	static class HandleAClient implements Runnable {
-		
 		private Socket socket;
 		private final String SavedImgAddr="temp.bmp";
 		//UserDatabase ud = new UserDatabase();
@@ -120,10 +119,27 @@ public class Server extends JFrame{
 			get();
 			
 			if(Result!=null){
-				Tools.saveImg((byte[])Result, SavedImgAddr);
-				Mat mat=Imgcodecs.imread(SavedImgAddr);
-				String res=NativeFunction.RecognitionLogo(mat.getNativeObjAddr());
-				send(res);
+				System.out.println(Tools.GetType((byte[])Result));
+				switch(Tools.GetType((byte[])Result)){
+				case 1:{
+					Tools.saveImg(Tools.GetInfo((byte[])Result), SavedImgAddr);
+					Mat mat=Imgcodecs.imread(SavedImgAddr);
+					String res=NativeFunction.RecognitionLogo(mat.getNativeObjAddr());
+					new File(SavedImgAddr).delete();
+					System.out.println(res);
+					send(res);
+					break;
+				}
+				case 2:{
+					String buffer=new String(Tools.GetInfo((byte[])Result));
+					send(Tools.Seg(buffer.split("\n")));
+					break;
+				}
+				default:{
+					send("接收信息失败");
+					break;
+				}
+				}
 			}
 			else{
 				send("Didn't get your infomation!");

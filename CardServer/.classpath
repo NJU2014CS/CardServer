@@ -8,6 +8,7 @@
 		</attributes>
 	</classpathentry>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/OpenCV-3.1.0"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/HanLP"/>
 	<classpathentry kind="lib" path="mysql-connector-java-5.1.40-bin.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

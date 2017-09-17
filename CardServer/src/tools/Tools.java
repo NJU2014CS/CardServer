@@ -12,6 +12,8 @@ import com.hankcs.hanlp.HanLP;
 import com.hankcs.hanlp.seg.Segment;
 import com.hankcs.hanlp.seg.common.Term;
 
+import recognition.ClassifyInfo;
+
 public class Tools {
 	private static Segment seg=HanLP.newSegment();
 	private static String MailReg=".*?([a-z0-9A-Z]+[-|\\.]?)+[a-z0-9A-Z]@([a-z0-9A-Z]+(-[a-z0-9A-Z]+)?\\.)+[a-zA-Z]{2,}.*?";
@@ -52,14 +54,14 @@ public class Tools {
 	public static String Seg(String[] info){
 		HashMap<String,String> map=new HashMap<>();
 		for(int i=0;i<info.length;i++){
-			info[i]=info[i].replaceAll(" ", "");
+			info[i]=info[i].replaceAll("\\s", "");
 			System.out.println(info[i]);
 			List<Term> list=seg.seg(info[i]);
 			System.out.println(list);
 			if(list.size()==0)
 				continue;
-			String naturename=list.get(list.size()-1).nature.name();
-			if(info[i].contains("公司")||naturename.contains("ni")||naturename.contains("nt")){
+			//String naturename=list.get(list.size()-1).nature.name();
+			if(info[i].contains("公司")){
 				map.put("company", info[i].substring(info[i].indexOf(":")+1));
 			}
 			else if(info[i].contains("地址")){
@@ -74,11 +76,36 @@ public class Tools {
 			else if(info[i].matches(PhoneReg)){
 				map.put("mobilephone", info[i]);
 			}
-			else if(naturename.contains("nr")){
+			/*else if(naturename.contains("nr")){
 				map.put("name", info[i]);
-			}
+			}*/
 			else if(info[i].contains("传真")){
 				map.put("fax", info[i].substring(info[i].indexOf(":")+1));
+			}
+			else{
+				ClassifyInfo ci=new ClassifyInfo();
+				try {
+					ci.SendData(info[i]);
+					Thread.sleep(500);
+					int type=ci.GetResult();
+					System.out.println(type);
+					switch(type){
+					case -1:break;
+					case 0:break;
+					case 1:map.put("address", info[i]);break;
+					case 2:map.put("company", info[i]);break;
+					case 3:map.put("duty", info[i]);break;
+					case 4:map.put("name", info[i]);break;
+					default:break;
+					}
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				
 			}
 		}
 		String res="";

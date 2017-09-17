@@ -27,6 +27,7 @@ public class Server extends JFrame{
 	private static JTextArea jta = new JTextArea();
 //	private List<String> message = new ArrayList<String>();
 	private ServerSocket serverSocket;
+//	private static String PyAdd="C:/Users/10313/Desktop/创新项目/646864264/predict.py";
 	
 	public Server() {
 		setLayout(new BorderLayout());
@@ -132,7 +133,7 @@ public class Server extends JFrame{
 				}
 				case 2:{
 					String buffer=new String(Tools.GetInfo((byte[])Result));
-					send(Tools.Seg(buffer.split("\n")));
+					send(Tools.Seg(buffer.split("\n|\t")));
 					break;
 				}
 				default:{

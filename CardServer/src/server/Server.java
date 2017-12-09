@@ -40,12 +40,12 @@ public class Server extends JFrame{
 		setVisible(true);
 		
 		//加载动态库
-		System.loadLibrary("TestJNI");
-		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+		//System.loadLibrary("TestJNI");
+		//System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		
 		//获取当前文件夹
 		File directory=new File("");
-		NativeFunction.Initial(directory.getAbsolutePath()+"\\logo\\");
+		//NativeFunction.Initial(directory.getAbsolutePath()+"\\logo\\");
 		
 		try {
 			serverSocket = new ServerSocket(8080);
@@ -123,12 +123,12 @@ public class Server extends JFrame{
 				System.out.println(Tools.GetType((byte[])Result));
 				switch(Tools.GetType((byte[])Result)){
 				case 1:{
-					Tools.saveImg(Tools.GetInfo((byte[])Result), SavedImgAddr);
-					Mat mat=Imgcodecs.imread(SavedImgAddr);
-					String res=NativeFunction.RecognitionLogo(mat.getNativeObjAddr());
-					new File(SavedImgAddr).delete();
-					System.out.println(res);
-					send(res);
+					//Tools.saveImg(Tools.GetInfo((byte[])Result), SavedImgAddr);
+					//Mat mat=Imgcodecs.imread(SavedImgAddr);
+					//String res=NativeFunction.RecognitionLogo(mat.getNativeObjAddr());
+					//new File(SavedImgAddr).delete();
+					//System.out.println(res);
+					send(" ");
 					break;
 				}
 				case 2:{

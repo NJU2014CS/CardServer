@@ -13,7 +13,7 @@ import com.hankcs.hanlp.seg.Segment;
 import com.hankcs.hanlp.seg.common.Term;
 
 public class ClassifyInfo {
-	private static String Directory="C:/Users/10313/Desktop/创新项目/646864264/";
+	private static String Directory="E:/创新项目/646864264/";
 	
 	public void SendData(String s) throws IOException{
 		File fout=new File(Directory+"predict.csv");
